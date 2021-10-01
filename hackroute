@@ -3,24 +3,28 @@
 ## hackroute
 ## tweeks-junk2(at)theweeks.org, v2020-10-01
 ##
-## "Be sure to run raspiconfig Networking / Configure Wi-fi before this script..."
+## Be sure to run raspiconfig Networking / Configure Wi-fi before this script...
 ## The end goal of this script is to give you reliable WiFi dhcp IPs when switching
 ## between wifi networks (some leases will cause dhcp-client queries to fail).. as 
 ## well set up a default route (esp for eth0) that allows all traffic to flow out 
 ## to the Internet over WiFi (wlan0) as the default route.
+##
+## Note.. this IS a hack.. and will not work on all wifi networks that do not use 
+## the gateway device as the DNS server. But it should work in 95% of most coffee
+## shops and small networks.. but this was a rush job.. Submit feedback..
 ## 
-## When this script runs, all actions are logged.
+## When this script runs, all actions are logged. Just do a 
 
 
 export STATUS=""
 
-export MESS="######## Cleaning upd network configs..." 
+export MESS="######## FIRST STEP: Cleaning up network configs..." 
 echo "######## $MESS" ; logger -t HACKROUTE "$MESS"
 systemctl stop networking.service
 rm /var/lib/dhcp/dhclient.*leases 
 ifdown eth0 >/dev/null 2>&1
 ifdown wlan0 >/dev/null 2>&1
-export MESS="Starting Networking back up cleanly..."
+export MESS="Starting up networking cleanly..."
 echo "######## $MESS"
 logger -t HACKROUTE "$MESS"
 systemctl start networking.service
@@ -36,7 +40,10 @@ export MESS="Fixing default route..."
 echo "######## $MESS" ; logger -t HACKROUTE "$MESS"
 export NAMESERVER=$(grep nameserver /etc/resolv.conf | tr -s [:blank:] | cut -f2 -d" ")
 route add default gw $NAMESERVER dev wlan0
-#systemctl stop networking.service
+## testing this.
+ip route flush cache
+## make it to the edge
+ping -c 1 $NAMESERVER
 
 export MESS="Modifying eth0 default route to wlan0's  $NAMESERVER.."
 echo "######## $MESS" ; logger -t HACKROUTE "$MESS"
