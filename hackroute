@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+export STATUS=""
+
+## "Be sure to run raspiconfig Networking / Configure Wi-fi before this script..."
+
+export MESS="######## Cleaning upd network configs..."
+echo "######## $MESS"
+logger -t HACKROUTE "$MESS"
+systemctl stop networking.service
+rm /var/lib/dhcp/dhclient.*leases 
+ifdown eth0 >/dev/null 2>&1
+ifdown wlan0 >/dev/null 2>&1
+export MESS="Starting Networking back up cleanly..."
+echo "######## $MESS"
+logger -t HACKROUTE "$MESS"
+systemctl start networking.service
+dhclient wlan0
+
+export MESS="Repaired network devices:"
+echo "######## $MESS"
+logger -t HACKROUTE "$MESS"
+ifconfig eth0
+ifconfig wlan0
+route -n
+
+export MESS="Fixing default route..."
+echo "######## $MESS"
+logger -t HACKROUTE "$MESS"
+export NAMESERVER=$(grep nameserver /etc/resolv.conf | tr -s [:blank:] | cut -f2 -d" ")
+route add default gw $NAMESERVER dev wlan0
+#systemctl stop networking.service
+
+export MESS="Modifying eth0 default route to wlan0's  $NAMESERVER.."
+echo "######## $MESS"
+logger -t HACKROUTE "$MESS"
+sleep 1
+sed -i "s/gateway .*/gateway $NAMESERVER/" /etc/network/interfaces
+ifdown --force eth0
+ifup eth0
+
+export MESS="Pinging the Internet....."
+echo "######## $MESS"
+logger -t HACKROUTE "$MESS"
+ping -c 1 8.8.8.8
+if [[ "$?" == "0" ]]; then
+	export MESS="RouteHack SUCCEESFUL...:)"
+	echo "######## $MESS"
+	logger -t HACKROUTE "$MESS"
+else
+	export MESS="RouteHack UNSUCCEESFUL... :("
+	echo "######## $MESS"
+	logger -t HACKROUTE "$MESS"
+fi
+
+export MESS="Restarting services..."
+echo "######## $MESS"
+logger -t HACKROUTE "$MESS"
+
+
+
+echo
+echo "######## DONE"
+
