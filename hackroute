@@ -13,7 +13,8 @@
 ## the gateway device as the DNS server. But it should work in 95% of most coffee
 ## shops and small networks.. but this was a rush job.. Submit feedback..
 ## 
-## When this script runs, all actions are logged. Just do a 
+## When this script runs, all actions are logged. Just do a:
+#	# tail -500 /var/log/syslog | grep HACKROUTE
 
 
 export STATUS=""
